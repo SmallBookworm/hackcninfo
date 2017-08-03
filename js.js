@@ -97,10 +97,10 @@ function addS() {
 						mfuck.push(one);
 					}
 
-					if ((mfuck.length+throwAmount) == total * 30)
+					if ((mfuck.length + throwAmount) == total * 30)
 						downloadFile('ok.xls', head + '<body><table>' + createTable(mfuck).innerHTML + '</table></body></html>')
 					else
-						console.log('' + (((mfuck.length+throwAmount) / (total * 30) * 100).toFixed(2) + '%'));
+						console.log('' + (((mfuck.length + throwAmount) / (total * 30) * 100).toFixed(2) + '%'));
 				}
 			}
 		});
@@ -143,7 +143,6 @@ function addS() {
 	}
 }
 
-var url = 'http://www.cninfo.com.cn/cninfo-new/disclosure/szse/download/1203746968?announceTime=2017-08-01';
 var urlRange = [1, 1];
 var hack = {};
 hack.get = function (urlRange) {
@@ -169,25 +168,26 @@ hack.getUrl = function (urlRange) {
 				type: 'POST',
 				data: $('#AnnoucementsQueryForm').serialize(),
 				dataType: 'json',
-				error: function () {
-					dataLoadingProgress(tabName, 1);
+				error: function (e) {
+					finishAmount += 30;
+					console.log(e);
+					console.log((finishAmount / (total) * 100).toFixed(2) + '%');
+					if (finishAmount == total)
+						console.log(failURL);
 				},
 				success: function (result) {
 					if (result != null) {
 						for (var i of result.announcements) {
+							if (i.announcementTitle.indexOf('摘要') != -1) {
+								total--;
+								continue;
+							}
 							var date = fomatDate(i.announcementTime);
 							for (var l = 0; l < 6 - i.secCode.length; l++)
 								i.secCode = '0' + i.secCode;
-							var one = {
-								代码: i.secCode,
-								简称: i.secName,
-								公告标题: i.announcementTitle,
-								公告时间: date,
-								年度报告网址:
-							};
-							if ()
-								var url = 'http://www.cninfo.com.cn/cninfo-new/disclosure/szse/download/' + i.announcementId + '?announceTime=' + date;
-							hack.downloadFile(url).then(function () {
+
+							var url = 'http://www.cninfo.com.cn/cninfo-new/disclosure/szse/download/' + i.announcementId + '?announceTime=' + date;
+							hack.downloadFile(url, i.secCode + i.secName+'：' + i.announcementTitle + date).then(function () {
 								finishAmount++;
 								console.log((finishAmount / (total) * 100).toFixed(2) + '%');
 								if (finishAmount == total)
@@ -208,7 +208,7 @@ hack.getUrl = function (urlRange) {
 
 	});
 }
-hack.downloadFile = function (url) {
+hack.downloadFile = function (url, fileName) {
 	var xhr = new XMLHttpRequest();
 
 	if (xhr.response) {
@@ -221,7 +221,7 @@ hack.downloadFile = function (url) {
 					var blob = xhr.response; // 注意:不是oReq.responseText
 					if (blob) {
 						var aLink = document.createElement('a');
-						aLink.download = 'sss.PDF';
+						aLink.download = fileName + '.PDF';
 						aLink.href = URL.createObjectURL(blob);
 						aLink.click();
 						resolve(url);
@@ -256,7 +256,7 @@ hack.downloadFile = function (url) {
 			}
 			var blob = new Blob([u8arr]);
 			var aLink = document.createElement('a');
-			aLink.download = 'sss.PDF';
+			aLink.download = fileName + '.PDF';
 			aLink.href = URL.createObjectURL(blob);
 			aLink.click();
 			resolve(url);
@@ -281,3 +281,4 @@ function loadImageAsync(url) {
 		image.src = url;
 	});
 }
+hack.getUrl(urlRange);
